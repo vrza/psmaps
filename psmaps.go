@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -26,14 +27,61 @@ func processes() []int {
 	return processes
 }
 
+// calculate width of columns other than command line
+func otherColumnsWidth(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner) int {
+	spacingWidth := 11
+	pidWidth := 0
+	userWidth := 0
+	ussWidth := 0
+	pssWidth := 0
+	rssWidth := 0
+
+	for pid, rollup := range rollups {
+		l := len(fmt.Sprintf("%d", pid))
+		if l > pidWidth {
+			pidWidth = l
+		}
+
+		user := pidOwnersMap[pid].username
+		if user == "" {
+			user = strconv.Itoa(pidOwnersMap[pid].uid)
+		}
+		l = len(fmt.Sprintf("%s", user))
+		if l > userWidth {
+			userWidth = l
+		}
+
+		uss := rollup.stats["Pss_Clean"] + rollup.stats["Pss_Dirty"]
+		l = len(fmt.Sprintf("%d", uss))
+		if l > ussWidth {
+			ussWidth = l
+		}
+
+		pss := rollup.stats["Pss"]
+		l = len(fmt.Sprintf("%d", pss))
+		if l > pssWidth {
+			pssWidth = l
+		}
+
+		rss := rollup.stats["Rss"]
+		l = len(fmt.Sprintf("%d", rss))
+		if l > rssWidth {
+			rssWidth = l
+		}
+	}
+
+	return spacingWidth + pidWidth + userWidth + ussWidth + pssWidth + rssWidth
+}
+
 // render output table to stdout
 func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string) {
 	terminalWidth, _, _ := terminal.GetSize(int(os.Stdin.Fd()))
-	cmdWidth := terminalWidth - 50 // TODO precise width calculation
+	cmdWidth := terminalWidth - otherColumnsWidth(rollups, pidOwnersMap)
 
 	t := table.NewWriter()
 
 	t.SetOutputMirror(os.Stdout)
+	t.SuppressTrailingSpaces()
 	t.SetColumnConfigs([]table.ColumnConfig{
 		{Number: 1, Align: text.AlignRight, AlignFooter: text.AlignRight, AlignHeader: text.AlignRight},
 		{Number: 2, Align: text.AlignLeft, AlignFooter: text.AlignLeft, AlignHeader: text.AlignLeft},
