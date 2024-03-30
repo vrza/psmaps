@@ -1,0 +1,7 @@
+= psmaps
+
+Report memory usage of processes, including
+
+- USS - Unique Set Size, memory that is completely unique to a process
+- PSS - Proportional Set Size, shared memory segments are assigned proportionally
+- RSS - Resident Set Size, total memory mapped by a process
