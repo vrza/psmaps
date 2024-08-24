@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -72,10 +73,24 @@ func otherColumnsWidth(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner
 	return spacingWidth + pidWidth + userWidth + ussWidth + pssWidth + rssWidth
 }
 
+func terminalWidth() int {
+	width, _, err := terminal.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		width, _, err = terminal.GetSize(int(os.Stdin.Fd()))
+		if err != nil {
+			width = 80
+		}
+	}
+	return width
+}
+
 // render output table to stdout
-func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string) {
-	terminalWidth, _, _ := terminal.GetSize(int(os.Stdout.Fd()))
-	cmdWidth := terminalWidth - otherColumnsWidth(rollups, pidOwnersMap)
+func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string, isWideOutput bool) {
+	cmdWidth := terminalWidth() - otherColumnsWidth(rollups, pidOwnersMap)
+	if cmdWidth < 7 {
+		cmdWidth = 7
+		isWideOutput = true
+	}
 
 	t := table.NewWriter()
 
@@ -104,7 +119,7 @@ func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMa
 			user = strconv.Itoa(pidOwnersMap[pid].uid)
 		}
 		command := cmdlineMap[pid]
-		if utf8.RuneCountInString(command) > cmdWidth {
+		if !isWideOutput && utf8.RuneCountInString(command) > cmdWidth {
 			command = string([]rune(cmdlineMap[pid])[0:cmdWidth])
 		}
 		t.AppendRow(table.Row{pid, user, uss, pss, rss, command})
@@ -113,14 +128,33 @@ func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMa
 	t.Render()
 }
 
+func printUsage() {
+	fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [OPTION]... [PID]...\n", os.Args[0])
+	fmt.Fprintf(flag.CommandLine.Output(), "Options:\n")
+	flag.PrintDefaults()
+}
+
 func main() {
 	//trace.Start(os.Stderr)
 	//defer trace.Stop()
 
+	// parse command line arguments
+	var help, isWideOutput bool
+	flag.BoolVar(&help, "h", false, "help")
+	flag.BoolVar(&isWideOutput, "w", false, "always print full command line")
+	flag.Usage = printUsage
+	flag.Parse()
+
+	if help {
+		printUsage()
+		os.Exit(0)
+	}
+
 	pids := []int{}
-	if len(os.Args) > 1 {
-		for i := 1; i < len(os.Args); i++ {
-			pid, err := strconv.Atoi(os.Args[i])
+	args := flag.Args()
+	if len(args) > 1 {
+		for i := 1; i < len(args); i++ {
+			pid, err := strconv.Atoi(args[i])
 			if err == nil {
 				pids = append(pids, pid)
 			}
@@ -144,5 +178,5 @@ func main() {
 
 	cmdlineMap := reduceCmdLines(comdlineChannelMap)
 
-	render(rollups, pidOwnersMap, cmdlineMap)
+	render(rollups, pidOwnersMap, cmdlineMap, isWideOutput)
 }
