@@ -128,10 +128,15 @@ func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMa
 	t.Render()
 }
 
+const flagHelpDescription = "print help information"
+const flagWideDescription = "always print full command line"
+
 func printUsage() {
 	fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [OPTION]... [PID]...\n", os.Args[0])
-	fmt.Fprintf(flag.CommandLine.Output(), "Options:\n")
-	flag.PrintDefaults()
+	fmt.Fprintf(flag.CommandLine.Output(), `Options:
+  -h, --help   %s
+  -w, --wide   %s
+`, flagHelpDescription, flagWideDescription)
 }
 
 func main() {
@@ -140,8 +145,10 @@ func main() {
 
 	// parse command line arguments
 	var help, isWideOutput bool
-	flag.BoolVar(&help, "h", false, "help")
-	flag.BoolVar(&isWideOutput, "w", false, "always print full command line")
+	flag.BoolVar(&help, "help", false, flagHelpDescription)
+	flag.BoolVar(&help, "h", false, flagHelpDescription)
+	flag.BoolVar(&isWideOutput, "wide", false, flagWideDescription)
+	flag.BoolVar(&isWideOutput, "w", false, flagWideDescription)
 	flag.Usage = printUsage
 	flag.Parse()
 
