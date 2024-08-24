@@ -10,7 +10,6 @@ import (
 	"strings"
 )
 
-
 type SmemHeader struct {
 	start int64
 	end   int64
@@ -28,11 +27,10 @@ type SmemRollupRaw struct {
 }
 
 type SmemRollup struct {
-	pid      int
-	header 	 SmemHeader
-	stats    map[string]int
+	pid    int
+	header SmemHeader
+	stats  map[string]int
 }
-
 
 func readSmapsRollup(pid int) (string, error) {
 	path := fmt.Sprintf("/proc/%d/smaps_rollup", pid)
@@ -49,10 +47,10 @@ func readSmapsRollup(pid int) (string, error) {
 		// Print errors, excluding expected errors:
 		// - no maps for kernel threads ("no such process")
 		// - permissions (run as superuser to get stats for all processes)
-		if 	!strings.HasSuffix(err.Error(), "no such process") &&
-			!strings.HasSuffix(err.Error(), "permission denied") && 
+		if !strings.HasSuffix(err.Error(), "no such process") &&
+			!strings.HasSuffix(err.Error(), "permission denied") &&
 			!strings.HasSuffix(err.Error(), "no such file or directory") {
-				fmt.Printf("Error reading %s: %v\n", path, err)
+			fmt.Printf("Error reading %s: %v\n", path, err)
 		}
 		return "", errors.New(fmt.Sprintf("PID %d is a kernel thread", pid))
 	}
@@ -132,28 +130,27 @@ func parseStatLine(statLine string) (SmemStat, error) {
 	return SmemStat{key, value}, nil
 }
 
-
 // dispatches smem_rollup file parser goroutines:
 // - one file reader goroutine per pid
 // - one parser goroutine per pid
 func dispatchSmemRollupParsers(pids []int) map[int](chan SmemRollup) {
-	pidSmemRollupParserCahnnelMap := map[int](chan SmemRollup){}
+	pidSmemRollupParserChannelMap := map[int](chan SmemRollup){}
 	for _, pid := range pids {
 		chSmemRollupReaderOutput := make(chan SmemRollupRaw, 1)
 		go smapsRollupReader(pid, chSmemRollupReaderOutput)
 
 		chSmemRollupParserOutput := make(chan SmemRollup, 1)
-		pidSmemRollupParserCahnnelMap[pid] = chSmemRollupParserOutput
+		pidSmemRollupParserChannelMap[pid] = chSmemRollupParserOutput
 		go smapsRollupParser(pid, chSmemRollupReaderOutput, chSmemRollupParserOutput)
 	}
-	return pidSmemRollupParserCahnnelMap
+	return pidSmemRollupParserChannelMap
 }
 
 // iterative reducer
 // iterates over channels and waits for them
-func reduceSmemRollupParsers(pidSmemRollupParserCahnnelMap map[int](chan SmemRollup)) map[int]SmemRollup {
+func reduceSmemRollupParsers(pidSmemRollupParserChannelMap map[int](chan SmemRollup)) map[int]SmemRollup {
 	pidRollupMap := map[int]SmemRollup{}
-	for pid, ch := range pidSmemRollupParserCahnnelMap {
+	for pid, ch := range pidSmemRollupParserChannelMap {
 		for rollup := range ch {
 			if len(rollup.stats) > 0 {
 				pidRollupMap[pid] = rollup
@@ -167,19 +164,19 @@ func reduceSmemRollupParsers(pidSmemRollupParserCahnnelMap map[int](chan SmemRol
 // reflect.select reducer
 // selects a channel that has data using reflect.SelectCase
 // because of the overhead of reflect.SelectCase, in this use case it's not really faster
-func reduceSmemRollupParsersSelect(pidSmemRollupParserCahnnelMap map[int](chan SmemRollup)) map[int]SmemRollup {
-	numCases := len(pidSmemRollupParserCahnnelMap)
+func reduceSmemRollupParsersSelect(pidSmemRollupParserChannelMap map[int](chan SmemRollup)) map[int]SmemRollup {
+	numCases := len(pidSmemRollupParserChannelMap)
 	pids := make([]int, numCases)
 	i := 0
-	for pid := range pidSmemRollupParserCahnnelMap {
+	for pid := range pidSmemRollupParserChannelMap {
 		pids[i] = pid
 		i++
 	}
-	
+
 	parserCases := make([]reflect.SelectCase, numCases)
-	
+
 	for i := range pids {
-		ch := pidSmemRollupParserCahnnelMap[pids[i]]
+		ch := pidSmemRollupParserChannelMap[pids[i]]
 		parserCases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)}
 	}
 
@@ -195,10 +192,10 @@ func reduceSmemRollupParsersSelect(pidSmemRollupParserCahnnelMap map[int](chan S
 		}
 
 		rollup := recv.Interface().(SmemRollup)
-		//fmt.Printf("Read from channel %d %#v and received %v\n", chosen, pidOwnerChannelMap[pids[chosen]], val)
+		//fmt.Printf("Read from channel %d %#v and received %v\n", chosen, pidSmemRollupParserChannelMap[pids[chosen]], rollup)
 
 		remainingParsers -= 1
-		close(pidSmemRollupParserCahnnelMap[pids[chosen]])
+		close(pidSmemRollupParserChannelMap[pids[chosen]])
 		parserCases[chosen].Chan = reflect.ValueOf(nil)
 
 		if len(rollup.stats) > 0 {
