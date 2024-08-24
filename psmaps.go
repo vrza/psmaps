@@ -2,18 +2,17 @@ package main
 
 import (
 	"fmt"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
+	"golang.org/x/crypto/ssh/terminal"
 	"log"
 	"os"
 	"strconv"
 	"unicode/utf8"
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
-
 // processes returns the list of all process IDs
-func processes() []int {
+func allProcesses() []int {
 	files, err := os.ReadDir("/proc/")
 	if err != nil {
 		log.Fatal(err)
@@ -75,7 +74,7 @@ func otherColumnsWidth(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner
 
 // render output table to stdout
 func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string) {
-	terminalWidth, _, _ := terminal.GetSize(int(os.Stdin.Fd()))
+	terminalWidth, _, _ := terminal.GetSize(int(os.Stdout.Fd()))
 	cmdWidth := terminalWidth - otherColumnsWidth(rollups, pidOwnersMap)
 
 	t := table.NewWriter()
@@ -105,7 +104,7 @@ func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMa
 			user = strconv.Itoa(pidOwnersMap[pid].uid)
 		}
 		command := cmdlineMap[pid]
-		if (utf8.RuneCountInString(command) > cmdWidth) {
+		if utf8.RuneCountInString(command) > cmdWidth {
 			command = string([]rune(cmdlineMap[pid])[0:cmdWidth])
 		}
 		t.AppendRow(table.Row{pid, user, uss, pss, rss, command})
@@ -118,7 +117,17 @@ func main() {
 	//trace.Start(os.Stderr)
 	//defer trace.Stop()
 
-	pids := processes()
+	pids := []int{}
+	if len(os.Args) > 1 {
+		for i := 1; i < len(os.Args); i++ {
+			pid, err := strconv.Atoi(os.Args[i])
+			if err == nil {
+				pids = append(pids, pid)
+			}
+		}
+	} else {
+		pids = allProcesses()
+	}
 
 	// dispatch
 	pidSmemRollupParserChannelMap := dispatchSmemRollupParsers(pids)
