@@ -30,11 +30,11 @@ func allProcesses() []int {
 // calculate width of columns other than command line
 func otherColumnsWidth(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner) int {
 	spacingWidth := 11
-	pidWidth := 0
-	userWidth := 0
-	ussWidth := 0
-	pssWidth := 0
-	rssWidth := 0
+	pidWidth := 3
+	userWidth := 4
+	ussWidth := 3
+	pssWidth := 3
+	rssWidth := 3
 
 	for pid, rollup := range rollups {
 		l := len(fmt.Sprintf("%d", pid))
