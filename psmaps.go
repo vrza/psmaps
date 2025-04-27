@@ -111,7 +111,7 @@ func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMa
 
 	t.AppendHeader(table.Row{"PID", "User", "USS", "PSS", "RSS", "Command"})
 	for pid, rollup := range rollups {
-		uss := rollup.stats["Pss_Clean"] + rollup.stats["Pss_Dirty"]
+		uss := rollup.stats["Private_Clean"] + rollup.stats["Private_Dirty"]
 		pss := rollup.stats["Pss"]
 		rss := rollup.stats["Rss"]
 		user := pidOwnersMap[pid].username
