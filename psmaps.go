@@ -51,7 +51,7 @@ func otherColumnsWidth(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner
 			userWidth = l
 		}
 
-		uss := rollup.stats["Pss_Clean"] + rollup.stats["Pss_Dirty"]
+		uss := rollup.stats["Private_Clean"] + rollup.stats["Private_Dirty"]
 		l = len(fmt.Sprintf("%d", uss))
 		if l > ussWidth {
 			ussWidth = l
