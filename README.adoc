@@ -1,9 +1,13 @@
 = psmaps
 
-Report memory usage of processes, including
+Reports memory usage of Linux processes, including USS, PSS, and RSS.
 
-- USS - Unique Set Size, memory that is completely unique to a process
-- PSS - Proportional Set Size, shared memory segments are assigned proportionally
-- RSS - Resident Set Size, total memory mapped by a process
+The memory metrics are defined as follows:
+
+- USS - unique set size, the amount of memory unique to a process, i.e. not shared with any other process.
+- PSS - proportional set size, the process’s unshared memory plus a proportional share of memory shared with other processes.
+- RSS - resident set size, the total memory resident in RAM for a process, including all private pages and all shared pages.
+
+All values are shown in kilobytes and represent memory resident in RAM (not swapped).
 
 image::https://raw.githubusercontent.com/vrza/psmaps/main/psmaps.png[psmaps screenshot]
