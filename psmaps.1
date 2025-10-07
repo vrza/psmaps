@@ -1,0 +1,51 @@
+.TH PSMAPS 1 2025-10-07 "psmaps" "General Commands Manual"
+.SH NAME
+psmaps \- reports memory usage of Linux processes
+.SH SYNOPSIS
+.B psmaps
+.RI [ option " .\|.\|.\&]" \ \fIpid\fP \ .\|.\|.
+.SH DESCRIPTION
+.B psmaps
+reports memory usage of Linux processes, including USS, PSS, and RSS.
+
+.PP
+The memory metrics are defined as follows:
+
+.TP
+.B USS
+unique set size, the amount of memory unique to a process, i.e. not shared with any other process.
+
+.TP
+.B PSS
+proportional set size, the process's unshared memory plus a proportional share of memory shared with other processes.
+
+.TP
+.B RSS
+resident set size, the total memory resident in RAM for a process, including all private pages and all shared pages.
+
+.PP
+All values are shown in kilobytes and represent memory resident in RAM (not swapped).
+
+.SH OPTIONS
+.TP
+.BR -h ", " --help
+Display a help message and exit.
+.TP
+.BR -w ", " --wide
+Always print the full command line, even if it exceeds the screen width.
+
+.SH EXAMPLES
+Example 1: Show memory usage of all
+.B php
+processes:
+.IP
+$ pgrep php | xargs psmaps
+.PP
+
+.SH AUTHOR
+Written by Vladimir Vrzić.
+.SH LICENSE
+This is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
