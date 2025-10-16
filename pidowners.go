@@ -11,14 +11,14 @@ import (
 )
 
 type PidOwner struct {
-	pid int
-	uid int
+	pid      int
+	uid      int
 	username string
-	err error
+	err      error
 }
 
 var (
-	uidUsernameCache = map[int]string{}
+	uidUsernameCache      = map[int]string{}
 	uidUsernameCacheMutex = sync.RWMutex{}
 )
 
@@ -43,8 +43,7 @@ func pidOwner(pid int, output chan PidOwner) {
 	info, err := os.Stat(fmt.Sprintf("/proc/%d", pid))
 	if err == nil {
 		if stat, ok := info.Sys().(*syscall.Stat_t); ok {
-			var uid int
-			uid = int(stat.Uid)
+			var uid int = int(stat.Uid)
 			username := userFromUID(uid)
 			//fmt.Printf("PidOwner sending %d - %d\n", pid, uid)
 			output <- PidOwner{pid, uid, username, nil}
@@ -97,9 +96,9 @@ func reducePidOwnersSelect(pidOwnerChannelMap map[int](chan PidOwner)) map[int]P
 		pids[i] = pid
 		i++
 	}
-	
+
 	pidOwnersMap := map[int]PidOwner{}
-	
+
 	remainingPidOwner := len(casesPidOwner)
 	for remainingPidOwner > 0 {
 		chosen, recv, ok := reflect.Select(casesPidOwner)
@@ -113,7 +112,7 @@ func reducePidOwnersSelect(pidOwnerChannelMap map[int](chan PidOwner)) map[int]P
 		//fmt.Printf("Read from channel %d %#v and received %v\n", chosen, pidOwnerChannelMap[pids[chosen]], val)
 
 		remainingPidOwner -= 1
-		close(pidOwnerChannelMap[pids[chosen]]) // close channel
+		close(pidOwnerChannelMap[pids[chosen]])           // close channel
 		casesPidOwner[chosen].Chan = reflect.ValueOf(nil) // zero out the channel to disable the case
 
 		if pidowner.err == nil {

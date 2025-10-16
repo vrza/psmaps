@@ -2,18 +2,16 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
 )
 
 type CmdLine struct {
-	pid int
+	pid     int
 	cmdline string
-	err error
+	err     error
 }
-
 
 func readCmdLine(pid int) (string, error) {
 	path := fmt.Sprintf("/proc/%d/cmdline", pid)
@@ -23,7 +21,7 @@ func readCmdLine(pid int) (string, error) {
 		replacer := strings.NewReplacer("\x00", " ")
 		s = replacer.Replace(s)
 		if len(s) == 0 {
-			return "", errors.New(fmt.Sprintf("Read zero size string from  %s: %s", path, s))
+			return "", fmt.Errorf("read zero size string from  %s: %s", path, s)
 		} else {
 			return s, nil
 		}
