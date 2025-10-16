@@ -47,7 +47,7 @@ func otherColumnsWidth(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner
 		if user == "" {
 			user = strconv.Itoa(pidOwnersMap[pid].uid)
 		}
-		l = len(fmt.Sprintf("%s", user))
+		l = len(user)
 		if l > userWidth {
 			userWidth = l
 		}
