@@ -11,8 +11,8 @@ import (
 )
 
 type SmemHeader struct {
-	start int64
-	end   int64
+	start uint64
+	end   uint64
 }
 
 type SmemStat struct {
@@ -38,8 +38,7 @@ func readSmapsRollup(pid int) (string, error) {
 	if err == nil {
 		s := string(contents)
 		if len(s) == 0 {
-			fmt.Printf("Read zero size string from  %s: %s\n", path, s)
-			return "", errors.New(fmt.Sprintf("Read zero size string from  %s: %s", path, s))
+			return "", fmt.Errorf("read zero size string from  %s: %s", path, s)
 		} else {
 			return s, nil
 		}
@@ -52,7 +51,7 @@ func readSmapsRollup(pid int) (string, error) {
 			!strings.HasSuffix(err.Error(), "no such file or directory") {
 			fmt.Printf("Error reading %s: %v\n", path, err)
 		}
-		return "", errors.New(fmt.Sprintf("PID %d is a kernel thread", pid))
+		return "", fmt.Errorf("PID %d is a kernel thread", pid)
 	}
 }
 
@@ -63,7 +62,7 @@ func smapsRollupReader(pid int, output chan SmemRollupRaw) {
 
 func parseSmapsRollup(pid int, contents string) SmemRollup {
 	lines := strings.Split(contents, "\n")
-	header := SmemHeader{-1, -1}
+	header := SmemHeader{0, 0}
 	stats := make(map[string]int)
 	for i, line := range lines {
 		if i == 0 { // header
@@ -90,7 +89,7 @@ func smapsRollupParser(pid int, input chan SmemRollupRaw, output chan SmemRollup
 	contents := <-input
 	//fmt.Printf("smapsRollupParser for PID %d read %d bytes\n", pid, len(contents))
 	if contents.err != nil || len(contents.contents) == 0 {
-		output <- SmemRollup{pid, SmemHeader{-1, -1}, nil}
+		output <- SmemRollup{pid, SmemHeader{0, 0}, nil}
 		return
 	}
 	output <- parseSmapsRollup(contents.pid, contents.contents)
@@ -102,11 +101,11 @@ func parseHeaderLine(headerLine string) SmemHeader {
 	rangeParts := strings.Split(addressParts[0], "-")
 	//fmt.Printf("parseHeaderLine first part is: %s\n", rangeParts[0])
 
-	start, err := strconv.ParseInt(rangeParts[0], 16, 64)
+	start, err := strconv.ParseUint(rangeParts[0], 16, 64)
 	if err != nil {
 		log.Fatal(err)
 	}
-	end, err := strconv.ParseInt(rangeParts[1], 16, 64)
+	end, err := strconv.ParseUint(rangeParts[1], 16, 64)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -116,7 +115,7 @@ func parseHeaderLine(headerLine string) SmemHeader {
 func parseStatLine(statLine string) (SmemStat, error) {
 	//fmt.Printf("parsing stat line: %s\n", statLine)
 	if len(statLine) == 0 {
-		return SmemStat{"", 0}, errors.New("Empty stat line")
+		return SmemStat{"", 0}, errors.New("empty stat line")
 	}
 	statParts := strings.Split(statLine, ":")
 	key := statParts[0]
