@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
-	"golang.org/x/crypto/ssh/terminal"
 	"log"
 	"os"
 	"strconv"
 	"unicode/utf8"
+
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
+	"golang.org/x/term"
 )
 
 // processes returns the list of all process IDs
@@ -74,9 +75,9 @@ func otherColumnsWidth(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner
 }
 
 func terminalWidth() int {
-	width, _, err := terminal.GetSize(int(os.Stdout.Fd()))
+	width, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
-		width, _, err = terminal.GetSize(int(os.Stdin.Fd()))
+		width, _, err = term.GetSize(int(os.Stdin.Fd()))
 		if err != nil {
 			width = 80
 		}
