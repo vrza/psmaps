@@ -238,7 +238,7 @@ func main() {
 		"user":    true,
 		"command": true,
 	}
-	if !allowedSortKeys[sortKey] {
+	if !allowedSortKeys[strings.ToLower(sortKey)] {
 		fmt.Fprintf(os.Stderr, "error: unknown sort key: %s\n", sortKey)
 		os.Exit(ExitInvalidArguments)
 	}
