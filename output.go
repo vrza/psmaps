@@ -23,19 +23,25 @@ func kiloBytesToString(value int, humanReadable bool) string {
 
 // try to infer terminal width
 func terminalWidth() int {
-	// 1. Try stdout
+	// Try stdout
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err == nil && width > 0 {
 		return width
 	}
 
-	// 2. Try stdin
+	// Try stderr
+	width, _, err = term.GetSize(int(os.Stderr.Fd()))
+	if err == nil && width > 0 {
+		return width
+	}
+
+	// Try stdin
 	width, _, err = term.GetSize(int(os.Stdin.Fd()))
 	if err == nil && width > 0 {
 		return width
 	}
 
-	// 3. Try /dev/tty (controlling terminal)
+	// Try /dev/tty
 	if tty, err := os.Open("/dev/tty"); err == nil {
 		defer tty.Close()
 		if ws, err := unix.IoctlGetWinsize(int(tty.Fd()), unix.TIOCGWINSZ); err == nil && ws.Col > 0 {
@@ -43,7 +49,7 @@ func terminalWidth() int {
 		}
 	}
 
-	// 4. Try $COLUMNS environment variable
+	// Try $COLUMNS environment variable
 	if cols := os.Getenv("COLUMNS"); cols != "" {
 		if c, err := strconv.Atoi(cols); err == nil && c > 0 {
 			return c
