@@ -1,4 +1,4 @@
-.TH PSMAPS 1 2025-10-07 "psmaps" "General Commands Manual"
+.TH PSMAPS 1 2025-11-04 "psmaps" "General Commands Manual"
 .SH NAME
 psmaps \- reports memory usage of Linux processes
 .SH SYNOPSIS
@@ -24,15 +24,27 @@ proportional set size, the process's unshared memory plus a proportional share o
 resident set size, the total memory resident in RAM for a process, including all private pages and all shared pages.
 
 .PP
-All values are shown in kilobytes and represent memory resident in RAM (not swapped).
+All values represent memory resident in RAM (not swapped).
+
+.PP
+Values are shown in KiB by default.
 
 .SH OPTIONS
 .TP
-.BR -h ", " --help
+.BR --help
 Display a help message and exit.
 .TP
 .BR -w ", " --wide
 Always print the full command line, even if it exceeds the screen width.
+.TP
+.BR -k ", " --key
+Select field to sort output on.
+.TP
+.BR -r ", " --reverse
+Sort in reverse order.
+.TP
+.BR -h ", " --human-readable
+Print sizes in human readable format (e.g. MiB, GiB).
 
 .SH EXAMPLES
 Example 1: Show memory usage of all
