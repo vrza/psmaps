@@ -9,6 +9,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+	"golang.org/x/sys/unix"
 	"golang.org/x/term"
 )
 
@@ -20,16 +21,37 @@ func kiloBytesToString(value int, humanReadable bool) string {
 	return fmt.Sprintf("%d", value)
 }
 
-// if output is to a terminal, get its width
+// try to infer terminal width
 func terminalWidth() int {
+	// 1. Try stdout
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil {
-		width, _, err = term.GetSize(int(os.Stdin.Fd()))
-		if err != nil {
-			width = 80
+	if err == nil && width > 0 {
+		return width
+	}
+
+	// 2. Try stdin
+	width, _, err = term.GetSize(int(os.Stdin.Fd()))
+	if err == nil && width > 0 {
+		return width
+	}
+
+	// 3. Try /dev/tty (controlling terminal)
+	if tty, err := os.Open("/dev/tty"); err == nil {
+		defer tty.Close()
+		if ws, err := unix.IoctlGetWinsize(int(tty.Fd()), unix.TIOCGWINSZ); err == nil && ws.Col > 0 {
+			return int(ws.Col)
 		}
 	}
-	return width
+
+	// 4. Try $COLUMNS environment variable
+	if cols := os.Getenv("COLUMNS"); cols != "" {
+		if c, err := strconv.Atoi(cols); err == nil && c > 0 {
+			return c
+		}
+	}
+
+	// 5. Default
+	return 80
 }
 
 // calculate width of columns other than command line
