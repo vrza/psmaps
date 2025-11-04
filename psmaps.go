@@ -5,12 +5,27 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strconv"
+	"strings"
 	"unicode/utf8"
 
+	"github.com/dustin/go-humanize"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"golang.org/x/term"
+)
+
+const (
+	ExitSuccess          = 0
+	ExitInvalidArguments = 1
+)
+
+const (
+	StatRSS          = "rss"
+	StatPSS          = "pss"
+	StatPrivateClean = "private_clean"
+	StatPrivateDirty = "private_dirty"
 )
 
 // processes returns the list of all process IDs
@@ -29,7 +44,7 @@ func allProcesses() []int {
 }
 
 // calculate width of columns other than command line
-func otherColumnsWidth(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner) int {
+func otherColumnsWidth(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, humanReadable bool) int {
 	spacingWidth := 11
 	pidWidth := 3
 	userWidth := 4
@@ -37,35 +52,35 @@ func otherColumnsWidth(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner
 	pssWidth := 3
 	rssWidth := 3
 
-	for pid, rollup := range rollups {
-		l := len(fmt.Sprintf("%d", pid))
+	for _, rollup := range rollups {
+		l := len(fmt.Sprintf("%d", rollup.pid))
 		if l > pidWidth {
 			pidWidth = l
 		}
 
-		user := pidOwnersMap[pid].username
+		user := pidOwnersMap[rollup.pid].username
 		if user == "" {
-			user = strconv.Itoa(pidOwnersMap[pid].uid)
+			user = strconv.Itoa(pidOwnersMap[rollup.pid].uid)
 		}
 		l = len(user)
 		if l > userWidth {
 			userWidth = l
 		}
 
-		uss := rollup.stats["Private_Clean"] + rollup.stats["Private_Dirty"]
-		l = len(fmt.Sprintf("%d", uss))
+		uss := rollup.stats[StatPrivateClean] + rollup.stats[StatPrivateDirty]
+		l = len(kiloBytesToString(uss, humanReadable))
 		if l > ussWidth {
 			ussWidth = l
 		}
 
-		pss := rollup.stats["Pss"]
-		l = len(fmt.Sprintf("%d", pss))
+		pss := rollup.stats[StatPSS]
+		l = len(kiloBytesToString(pss, humanReadable))
 		if l > pssWidth {
 			pssWidth = l
 		}
 
-		rss := rollup.stats["Rss"]
-		l = len(fmt.Sprintf("%d", rss))
+		rss := rollup.stats[StatRSS]
+		l = len(kiloBytesToString(rss, humanReadable))
 		if l > rssWidth {
 			rssWidth = l
 		}
@@ -74,6 +89,7 @@ func otherColumnsWidth(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner
 	return spacingWidth + pidWidth + userWidth + ussWidth + pssWidth + rssWidth
 }
 
+// if output is to a terminal, get its width
 func terminalWidth() int {
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
@@ -85,9 +101,17 @@ func terminalWidth() int {
 	return width
 }
 
+// render size in kilobytes to a string, optionally human-readable
+func kiloBytesToString(value int, humanReadable bool) string {
+	if humanReadable {
+		return humanize.Bytes(uint64(value * 1024))
+	}
+	return fmt.Sprintf("%d", value)
+}
+
 // render output table to stdout
-func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string, isWideOutput bool) {
-	cmdWidth := terminalWidth() - otherColumnsWidth(rollups, pidOwnersMap)
+func render(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string, isWideOutput bool, humanReadable bool) {
+	cmdWidth := terminalWidth() - otherColumnsWidth(rollups, pidOwnersMap, humanReadable)
 	if cmdWidth < 7 {
 		cmdWidth = 7
 		isWideOutput = true
@@ -111,10 +135,11 @@ func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMa
 	t.Style().Options.SeparateRows = false
 
 	t.AppendHeader(table.Row{"PID", "User", "USS", "PSS", "RSS", "Command"})
-	for pid, rollup := range rollups {
-		uss := rollup.stats["Private_Clean"] + rollup.stats["Private_Dirty"]
-		pss := rollup.stats["Pss"]
-		rss := rollup.stats["Rss"]
+	for _, rollup := range rollups {
+		pid := rollup.pid
+		uss := kiloBytesToString((rollup.stats[StatPrivateClean] + rollup.stats[StatPrivateDirty]), humanReadable)
+		pss := kiloBytesToString((rollup.stats[StatPSS]), humanReadable)
+		rss := kiloBytesToString(rollup.stats[StatRSS], humanReadable)
 		user := pidOwnersMap[pid].username
 		if user == "" {
 			user = strconv.Itoa(pidOwnersMap[pid].uid)
@@ -129,15 +154,56 @@ func render(rollups map[int]SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMa
 	t.Render()
 }
 
+func sortRollupsByStat(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string, key string, reverseOrder bool) []SmemRollup {
+	keyLower := strings.ToLower(key)
+	slices.SortFunc(rollups, func(a, b SmemRollup) int {
+		var cmp int
+
+		switch keyLower {
+		case "pid": // not in stats map, integer
+			cmp = a.pid - b.pid
+		case "uss": // dynamically computed, integer
+			ussA := a.stats[StatPrivateClean] + a.stats[StatPrivateDirty]
+			ussB := b.stats[StatPrivateClean] + b.stats[StatPrivateDirty]
+			cmp = ussA - ussB
+		case "user": // not in stats map, string
+			userA := pidOwnersMap[a.pid].username
+			userB := pidOwnersMap[b.pid].username
+			cmp = strings.Compare(userA, userB)
+		case "command": // not in stats map, string
+			cmp = strings.Compare(cmdlineMap[a.pid], cmdlineMap[b.pid])
+		default: // by case-instensitive key in stats map, integer
+			cmp = a.stats[keyLower] - b.stats[keyLower]
+		}
+
+		if reverseOrder {
+			cmp *= -1
+		}
+		return cmp
+	})
+	return rollups
+}
+
 const flagHelpDescription = "print help information"
 const flagWideDescription = "always print full command line"
+const flagSortKeyDescription = "field to sort output on"
+const flagReverseSortDescription = "sort in reverse order"
+const flagHumanReadableDescription = "print sizes in human readable format"
 
 func printUsage() {
 	fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [OPTION]... [PID]...\n", os.Args[0])
 	fmt.Fprintf(flag.CommandLine.Output(), `Options:
-  -h, --help   %s
-  -w, --wide   %s
-`, flagHelpDescription, flagWideDescription)
+  --help                %s
+  -w, --wide            %s
+  -k, --key             %s
+  -r, --reverse         %s
+  -h, --human-readable  %s
+`,
+		flagHelpDescription,
+		flagWideDescription,
+		flagSortKeyDescription,
+		flagReverseSortDescription,
+		flagHumanReadableDescription)
 }
 
 func main() {
@@ -145,17 +211,36 @@ func main() {
 	//defer trace.Stop()
 
 	// parse command line arguments
-	var help, isWideOutput bool
+	var help, wideOutput, reverseOrder, humanReadable bool
+	var sortKey string
 	flag.BoolVar(&help, "help", false, flagHelpDescription)
-	flag.BoolVar(&help, "h", false, flagHelpDescription)
-	flag.BoolVar(&isWideOutput, "wide", false, flagWideDescription)
-	flag.BoolVar(&isWideOutput, "w", false, flagWideDescription)
+	flag.BoolVar(&wideOutput, "wide", false, flagWideDescription)
+	flag.BoolVar(&wideOutput, "w", false, flagWideDescription)
+	flag.StringVar(&sortKey, "key", "pid", flagSortKeyDescription)
+	flag.StringVar(&sortKey, "k", "pid", flagSortKeyDescription)
+	flag.BoolVar(&reverseOrder, "reverse", false, flagReverseSortDescription)
+	flag.BoolVar(&reverseOrder, "r", false, flagReverseSortDescription)
+	flag.BoolVar(&humanReadable, "human-readable", false, flagWideDescription)
+	flag.BoolVar(&humanReadable, "h", false, flagWideDescription)
 	flag.Usage = printUsage
 	flag.Parse()
 
 	if help {
 		printUsage()
-		os.Exit(0)
+		os.Exit(ExitSuccess)
+	}
+
+	allowedSortKeys := map[string]bool{
+		"pid":     true,
+		"rss":     true,
+		"pss":     true,
+		"uss":     true,
+		"user":    true,
+		"command": true,
+	}
+	if !allowedSortKeys[sortKey] {
+		fmt.Fprintf(os.Stderr, "error: unknown sort key: %s\n", sortKey)
+		os.Exit(ExitInvalidArguments)
 	}
 
 	pids := []int{}
@@ -186,5 +271,7 @@ func main() {
 
 	cmdlineMap := reduceCmdLines(comdlineChannelMap)
 
-	render(rollups, pidOwnersMap, cmdlineMap, isWideOutput)
+	sortRollupsByStat(rollups, pidOwnersMap, cmdlineMap, sortKey, reverseOrder)
+
+	render(rollups, pidOwnersMap, cmdlineMap, wideOutput, humanReadable)
 }

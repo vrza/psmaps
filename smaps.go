@@ -74,7 +74,7 @@ func parseSmapsRollup(pid int, contents string) SmemRollup {
 			}
 			stat, err := parseStatLine(line)
 			if err == nil {
-				stats[stat.name] = stat.value
+				stats[strings.ToLower(stat.name)] = stat.value
 				//final = fmt.Sprintf("%s => %d", stat.name, stat.value)
 				//fmt.Printf("smapsRollupParser found stat: %s: %d\n", stat.name, stat.value)
 			}
@@ -147,23 +147,23 @@ func dispatchSmemRollupParsers(pids []int) map[int](chan SmemRollup) {
 
 // iterative reducer
 // iterates over channels and waits for them
-func reduceSmemRollupParsers(pidSmemRollupParserChannelMap map[int](chan SmemRollup)) map[int]SmemRollup {
-	pidRollupMap := map[int]SmemRollup{}
-	for pid, ch := range pidSmemRollupParserChannelMap {
+func reduceSmemRollupParsers(pidSmemRollupParserChannelMap map[int](chan SmemRollup)) []SmemRollup {
+	var rollupSlice []SmemRollup
+	for _, ch := range pidSmemRollupParserChannelMap {
 		for rollup := range ch {
 			if len(rollup.stats) > 0 {
-				pidRollupMap[pid] = rollup
+				rollupSlice = append(rollupSlice, rollup)
 			}
 			close(ch)
 		}
 	}
-	return pidRollupMap
+	return rollupSlice
 }
 
 // reflect.select reducer
 // selects a channel that has data using reflect.SelectCase
 // because of the overhead of reflect.SelectCase, in this use case it's not really faster
-func reduceSmemRollupParsersSelect(pidSmemRollupParserChannelMap map[int](chan SmemRollup)) map[int]SmemRollup {
+func reduceSmemRollupParsersSelect(pidSmemRollupParserChannelMap map[int](chan SmemRollup)) []SmemRollup {
 	numCases := len(pidSmemRollupParserChannelMap)
 	pids := make([]int, numCases)
 	i := 0
@@ -179,7 +179,7 @@ func reduceSmemRollupParsersSelect(pidSmemRollupParserChannelMap map[int](chan S
 		parserCases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)}
 	}
 
-	pidRollupMap := map[int]SmemRollup{}
+	var rollupSlice []SmemRollup
 
 	remainingParsers := len(parserCases)
 	for remainingParsers > 0 {
@@ -198,9 +198,9 @@ func reduceSmemRollupParsersSelect(pidSmemRollupParserChannelMap map[int](chan S
 		parserCases[chosen].Chan = reflect.ValueOf(nil)
 
 		if len(rollup.stats) > 0 {
-			pidRollupMap[pids[chosen]] = rollup
+			rollupSlice = append(rollupSlice, rollup)
 			//fmt.Printf("PID %d: %s\n", pids[chosen], parsedLine)
 		}
 	}
-	return pidRollupMap
+	return rollupSlice
 }
