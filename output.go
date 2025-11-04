@@ -56,7 +56,7 @@ func terminalWidth() int {
 		}
 	}
 
-	// 5. Default
+	// Default
 	return 80
 }
 
