@@ -154,7 +154,7 @@ func render(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[
 	t.Render()
 }
 
-func sortRollupsByStat(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string, key string, reverseOrder bool) []SmemRollup {
+func sortRollups(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string, key string, reverseOrder bool) []SmemRollup {
 	keyLower := strings.ToLower(key)
 	slices.SortFunc(rollups, func(a, b SmemRollup) int {
 		var cmp int
@@ -271,7 +271,7 @@ func main() {
 
 	cmdlineMap := reduceCmdLines(comdlineChannelMap)
 
-	sortRollupsByStat(rollups, pidOwnersMap, cmdlineMap, sortKey, reverseOrder)
+	sortRollups(rollups, pidOwnersMap, cmdlineMap, sortKey, reverseOrder)
 
 	render(rollups, pidOwnersMap, cmdlineMap, wideOutput, humanReadable)
 }
