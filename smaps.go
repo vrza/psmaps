@@ -33,7 +33,7 @@ type SmemRollup struct {
 }
 
 func readSmapsRollup(pid int) (string, error) {
-	path := fmt.Sprintf("/proc/%d/smaps_rollup", pid)
+	path := fmt.Sprintf("%s/%d/smaps_rollup", procDir, pid)
 	contents, err := os.ReadFile(path)
 	if err == nil {
 		s := string(contents)

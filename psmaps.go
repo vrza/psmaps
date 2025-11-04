@@ -12,7 +12,7 @@ import (
 
 // processes returns the list of all process IDs
 func allProcesses() []int {
-	files, err := os.ReadDir("/proc/")
+	files, err := os.ReadDir(procDir + "/")
 	if err != nil {
 		log.Fatal(err)
 	}

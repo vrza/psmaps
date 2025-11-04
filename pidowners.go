@@ -40,7 +40,7 @@ func userFromUID(uid int) string {
 }
 
 func pidOwner(pid int, output chan PidOwner) {
-	info, err := os.Stat(fmt.Sprintf("/proc/%d", pid))
+	info, err := os.Stat(fmt.Sprintf("%s/%d", procDir, pid))
 	if err == nil {
 		if stat, ok := info.Sys().(*syscall.Stat_t); ok {
 			var uid int = int(stat.Uid)
@@ -49,7 +49,7 @@ func pidOwner(pid int, output chan PidOwner) {
 			output <- PidOwner{pid, uid, username, nil}
 		}
 	} else {
-		//fmt.Printf("could not stat /proc/%d\n", pid)
+		//fmt.Printf("could not stat %s/%d\n", procDir, pid)
 		output <- PidOwner{pid, -1, "", err}
 	}
 }

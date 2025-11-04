@@ -14,7 +14,7 @@ type CmdLine struct {
 }
 
 func readCmdLine(pid int) (string, error) {
-	path := fmt.Sprintf("/proc/%d/cmdline", pid)
+	path := fmt.Sprintf("%s/%d/cmdline", procDir, pid)
 	contents, err := os.ReadFile(path)
 	if err == nil {
 		s := string(bytes.Trim(contents, "\x00"))

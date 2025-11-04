@@ -6,3 +6,5 @@ const (
 	StatPrivateClean = "private_clean"
 	StatPrivateDirty = "private_dirty"
 )
+
+const procDir = "/proc"
