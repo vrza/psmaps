@@ -246,7 +246,7 @@ func main() {
 	pids := []int{}
 	args := flag.Args()
 	if len(args) > 0 {
-		for i := 0; i < len(args); i++ {
+		for i := range args {
 			pid, err := strconv.Atoi(args[i])
 			if err == nil && pid > 0 {
 				pids = append(pids, pid)
