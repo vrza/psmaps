@@ -77,6 +77,11 @@ func printUsage() {
 		flagHumanReadableDescription)
 }
 
+const (
+	ExitSuccess          = 0
+	ExitInvalidArguments = 1
+)
+
 func main() {
 	//trace.Start(os.Stderr)
 	//defer trace.Stop()
