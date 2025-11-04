@@ -103,7 +103,7 @@ func reducePidOwnersSelect(pidOwnerChannelMap map[int](chan PidOwner)) map[int]P
 	for remainingPidOwner > 0 {
 		chosen, recv, ok := reflect.Select(casesPidOwner)
 		if !ok {
-			fmt.Printf("reducePidOwnersSelect: Selected channel %d has been closed, zeroing out the channel to disable the case\n", chosen)
+			fmt.Fprintf(os.Stderr, "reducePidOwnersSelect: Selected channel %d has been closed, zeroing out the channel to disable the case\n", chosen)
 			casesPidOwner[chosen].Chan = reflect.ValueOf(nil)
 			continue
 		}

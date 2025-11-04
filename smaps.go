@@ -49,7 +49,7 @@ func readSmapsRollup(pid int) (string, error) {
 		if !strings.HasSuffix(err.Error(), "no such process") &&
 			!strings.HasSuffix(err.Error(), "permission denied") &&
 			!strings.HasSuffix(err.Error(), "no such file or directory") {
-			fmt.Printf("Error reading %s: %v\n", path, err)
+			fmt.Fprintf(os.Stderr, "Error reading %s: %v\n", path, err)
 		}
 		return "", fmt.Errorf("PID %d is a kernel thread", pid)
 	}
@@ -185,7 +185,7 @@ func reduceSmemRollupParsersSelect(pidSmemRollupParserChannelMap map[int](chan S
 	for remainingParsers > 0 {
 		chosen, recv, ok := reflect.Select(parserCases)
 		if !ok {
-			fmt.Printf("reduceSmemRollupParsersSelect: Selected channel %d has been closed, zeroing out the channel to disable the case\n", chosen)
+			fmt.Fprintf(os.Stderr, "reduceSmemRollupParsersSelect: Selected channel %d has been closed, zeroing out the channel to disable the case\n", chosen)
 			parserCases[chosen].Chan = reflect.ValueOf(nil)
 			continue
 		}
