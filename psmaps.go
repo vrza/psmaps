@@ -104,7 +104,7 @@ func terminalWidth() int {
 // render size in kilobytes to a string, optionally human-readable
 func kiloBytesToString(value int, humanReadable bool) string {
 	if humanReadable {
-		return humanize.Bytes(uint64(value * 1024))
+		return humanize.IBytes(uint64(value * 1024))
 	}
 	return fmt.Sprintf("%d", value)
 }
