@@ -1,6 +1,6 @@
 = psmaps
 
-Reports memory usage of Linux processes, including USS, PSS, and RSS.
+`psmaps` reports memory usage of Linux processes, including USS, PSS, and RSS.
 
 The memory metrics are defined as follows:
 
@@ -8,7 +8,9 @@ The memory metrics are defined as follows:
 - PSS - proportional set size, the process’s unshared memory plus a proportional share of memory shared with other processes.
 - RSS - resident set size, the total memory resident in RAM for a process, including all private pages and all shared pages.
 
-All values are shown in kilobytes and represent memory resident in RAM (not swapped).
+All values represent memory resident in RAM (not swapped).
+
+See included man page `psmaps(1)` for documentation, or run `psmaps --help`.
 
 == Example
 
