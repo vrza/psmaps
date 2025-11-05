@@ -36,7 +36,7 @@ func userFromUID(uid int) string {
 		uidUsernameCacheMutex.Unlock()
 		return user.Username
 	}
-	return ""
+	return strconv.Itoa(uid)
 }
 
 func pidOwner(pid int, output chan PidOwner) {
