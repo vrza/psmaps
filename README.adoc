@@ -10,21 +10,46 @@ The memory metrics are defined as follows:
 
 All values represent memory resident in RAM (not swapped).
 
+Values are shown in KiB by default.
+
+See included man page `psmaps(1)` for documentation, or run `psmaps --help`.
+
+== Synopsis
+
+*psmaps* [_OPTION_]... _[PID_]...
+
+== Options
+
+*--help*::
+  Print help information.
+
+*-w, --wide*::
+  Always print the full command line, even if it exceeds the screen width.
+
+*-k, --key*::
+  Select field to sort output on.
+
+*-r, --reverse*::
+  Sort in reverse order.
+
+*-h, --human-readable*::
+  Print sizes in human readable format (e.g. MiB, GiB).
+
 See included man page `psmaps(1)` for documentation, or run `psmaps --help`.
 
 == Example
 
 ```
 $ pgrep -f firefox | xargs psmaps -k pss -r -h | head
-   PID  USER        USS      PSS      RSS  COMMAND
-  2371  random  605 MiB  635 MiB  850 MiB  /usr/lib64/firefox/firefox
-  2623  random  287 MiB  297 MiB  425 MiB  /usr/lib64/firefox/firefox -contentpr
-  2748  random  248 MiB  256 MiB  384 MiB  /usr/lib64/firefox/firefox -contentpr
-  2772  random  162 MiB  168 MiB  291 MiB  /usr/lib64/firefox/firefox -contentpr
- 12381  random  147 MiB  154 MiB  275 MiB  /usr/lib64/firefox/firefox -contentpr
- 12737  random  139 MiB  147 MiB  271 MiB  /usr/lib64/firefox/firefox -contentpr
-  2532  random  141 MiB  147 MiB  250 MiB  /usr/lib64/firefox/firefox -contentpr
- 13205  random  100 MiB  106 MiB  226 MiB  /usr/lib64/firefox/firefox -contentpr
-  2954  random   99 MiB  105 MiB  224 MiB  /usr/lib64/firefox/firefox -contentpr
- 10381  random   96 MiB  102 MiB  222 MiB  /usr/lib64/firefox/firefox -contentpr
+   PID  USER      USS      PSS      RSS  COMMAND
+  2371  vrza  605 MiB  635 MiB  850 MiB  /usr/lib64/firefox/firefox
+  2623  vrza  287 MiB  297 MiB  425 MiB  /usr/lib64/firefox/firefox -contentpr
+  2748  vrza  248 MiB  256 MiB  384 MiB  /usr/lib64/firefox/firefox -contentpr
+  2772  vrza  162 MiB  168 MiB  291 MiB  /usr/lib64/firefox/firefox -contentpr
+ 12381  vrza  147 MiB  154 MiB  275 MiB  /usr/lib64/firefox/firefox -contentpr
+ 12737  vrza  139 MiB  147 MiB  271 MiB  /usr/lib64/firefox/firefox -contentpr
+  2532  vrza  141 MiB  147 MiB  250 MiB  /usr/lib64/firefox/firefox -contentpr
+ 13205  vrza  100 MiB  106 MiB  226 MiB  /usr/lib64/firefox/firefox -contentpr
+  2954  vrza   99 MiB  105 MiB  224 MiB  /usr/lib64/firefox/firefox -contentpr
+ 10381  vrza   96 MiB  102 MiB  222 MiB  /usr/lib64/firefox/firefox -contentpr
 ```
