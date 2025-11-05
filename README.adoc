@@ -49,5 +49,4 @@ $ pgrep -f firefox | xargs psmaps -k pss -r -h | head
   2532  vrza  141 MiB  147 MiB  250 MiB  /usr/lib64/firefox/firefox -contentpr
  13205  vrza  100 MiB  106 MiB  226 MiB  /usr/lib64/firefox/firefox -contentpr
   2954  vrza   99 MiB  105 MiB  224 MiB  /usr/lib64/firefox/firefox -contentpr
- 10381  vrza   96 MiB  102 MiB  222 MiB  /usr/lib64/firefox/firefox -contentpr
 ```
