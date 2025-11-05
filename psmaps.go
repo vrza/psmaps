@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// processes returns the list of all process IDs
+// returns the list of PIDs of all processes
 func allProcesses() []int {
 	files, err := os.ReadDir(procDir + "/")
 	if err != nil {
@@ -106,6 +106,7 @@ func main() {
 		os.Exit(ExitSuccess)
 	}
 
+	// validate sort key
 	allowedSortKeys := map[string]bool{
 		"pid":     true,
 		"rss":     true,
@@ -119,6 +120,7 @@ func main() {
 		os.Exit(ExitInvalidArguments)
 	}
 
+	// select PIDs
 	pids := []int{}
 	args := flag.Args()
 	if len(args) > 0 {
@@ -132,12 +134,12 @@ func main() {
 		pids = allProcesses()
 	}
 
-	// dispatch
+	// dispatch goroutines
 	pidSmemRollupParserChannelMap := dispatchSmemRollupParsers(pids)
 	pidOwnerChannelMap := dispatchPidOwners(pids)
 	comdlineChannelMap := dispatchCmdLineReaders(pids)
 
-	// collect
+	// collect results
 
 	//rollups := reduceSmemRollupParsers(pidSmemRollupParserChannelMap)
 	rollups := reduceSmemRollupParsersSelect(pidSmemRollupParserChannelMap)
@@ -147,7 +149,9 @@ func main() {
 
 	cmdlineMap := reduceCmdLines(comdlineChannelMap)
 
+	// sort
 	sortRollups(rollups, pidOwnersMap, cmdlineMap, sortKey, reverseOrder)
 
+	// output
 	render(rollups, pidOwnersMap, cmdlineMap, wideOutput, humanReadable)
 }
