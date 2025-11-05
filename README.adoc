@@ -35,8 +35,6 @@ See included man page `psmaps(1)` for documentation, or run `psmaps --help`.
 *-h, --human-readable*::
   Print sizes in human readable format (e.g. MiB, GiB).
 
-See included man page `psmaps(1)` for documentation, or run `psmaps --help`.
-
 == Example
 
 ```
