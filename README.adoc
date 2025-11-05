@@ -10,4 +10,19 @@ The memory metrics are defined as follows:
 
 All values are shown in kilobytes and represent memory resident in RAM (not swapped).
 
-image::https://raw.githubusercontent.com/vrza/psmaps/main/psmaps.png[psmaps screenshot]
+== Example
+
+```
+$ pgrep -f firefox | xargs psmaps -k pss -r -h | head
+   PID  USER        USS      PSS      RSS  COMMAND
+  2371  random  605 MiB  635 MiB  850 MiB  /usr/lib64/firefox/firefox
+  2623  random  287 MiB  297 MiB  425 MiB  /usr/lib64/firefox/firefox -contentpr
+  2748  random  248 MiB  256 MiB  384 MiB  /usr/lib64/firefox/firefox -contentpr
+  2772  random  162 MiB  168 MiB  291 MiB  /usr/lib64/firefox/firefox -contentpr
+ 12381  random  147 MiB  154 MiB  275 MiB  /usr/lib64/firefox/firefox -contentpr
+ 12737  random  139 MiB  147 MiB  271 MiB  /usr/lib64/firefox/firefox -contentpr
+  2532  random  141 MiB  147 MiB  250 MiB  /usr/lib64/firefox/firefox -contentpr
+ 13205  random  100 MiB  106 MiB  226 MiB  /usr/lib64/firefox/firefox -contentpr
+  2954  random   99 MiB  105 MiB  224 MiB  /usr/lib64/firefox/firefox -contentpr
+ 10381  random   96 MiB  102 MiB  222 MiB  /usr/lib64/firefox/firefox -contentpr
+```
