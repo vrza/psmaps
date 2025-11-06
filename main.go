@@ -1,3 +1,39 @@
+/*
+psmaps reports memory usage of Linux processes, including USS, PSS, and RSS.
+
+The memory metrics are defined as follows:
+
+- USS - unique set size, the amount of memory unique to a process, i.e. not shared with any other process.
+
+- PSS - proportional set size, the process’s unshared memory plus a proportional share of memory shared with other processes.
+
+- RSS - resident set size, the total memory resident in RAM for a process, including all private pages and all shared pages.
+
+All values represent memory resident in RAM (not swapped).
+
+Values are shown in KiB by default.
+
+Usage:
+
+psmaps [flags] [pid ...]
+
+Flags:
+
+	--help
+		Print help information.
+
+	-w, --wide
+		Always print the full command line, even if it exceeds the screen width.
+
+	-k, --key
+		Select field to sort output on.
+
+	-r, --reverse
+		Sort in reverse order.
+
+	-h, --human-readable
+		Print sizes in human readable format (e.g. MiB, GiB).
+*/
 package main
 
 import (
@@ -5,7 +41,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -25,34 +60,6 @@ func allProcesses() []int {
 		}
 	}
 	return processes
-}
-
-func sortRollups(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string, key string, reverseOrder bool) []SmemRollup {
-	keyLower := strings.ToLower(key)
-	slices.SortFunc(rollups, func(a, b SmemRollup) int {
-		var cmp int
-
-		switch keyLower {
-		case "pid": // not in stats map, integer
-			cmp = a.pid - b.pid
-		case "uss": // dynamically computed, integer
-			cmp = a.getUSS() - b.getUSS()
-		case "user": // not in stats map, string
-			userA := pidOwnersMap[a.pid].username
-			userB := pidOwnersMap[b.pid].username
-			cmp = strings.Compare(userA, userB)
-		case "command": // not in stats map, string
-			cmp = strings.Compare(cmdlineMap[a.pid], cmdlineMap[b.pid])
-		default: // by case-instensitive key in stats map, integer
-			cmp = a.stats[keyLower] - b.stats[keyLower]
-		}
-
-		if reverseOrder {
-			cmp *= -1
-		}
-		return cmp
-	})
-	return rollups
 }
 
 const flagHelpDescription = "print help information"
