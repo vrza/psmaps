@@ -10,6 +10,13 @@ import (
 	"strings"
 )
 
+const (
+	StatRSS          = "rss"
+	StatPSS          = "pss"
+	StatPrivateClean = "private_clean"
+	StatPrivateDirty = "private_dirty"
+)
+
 type SmemHeader struct {
 	start uint64
 	end   uint64
@@ -30,6 +37,18 @@ type SmemRollup struct {
 	pid    int
 	header SmemHeader
 	stats  map[string]int
+}
+
+func (r SmemRollup) getUSS() int {
+	return r.stats[StatPrivateClean] + r.stats[StatPrivateDirty]
+}
+
+func (r SmemRollup) getPSS() int {
+	return r.stats[StatPSS]
+}
+
+func (r SmemRollup) getRSS() int {
+	return r.stats[StatRSS]
 }
 
 func readSmapsRollup(pid int) (string, error) {

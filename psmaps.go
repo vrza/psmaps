@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+const procDir = "/proc"
+
 // returns the list of PIDs of all processes
 func allProcesses() []int {
 	files, err := os.ReadDir(procDir + "/")
@@ -34,9 +36,7 @@ func sortRollups(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap
 		case "pid": // not in stats map, integer
 			cmp = a.pid - b.pid
 		case "uss": // dynamically computed, integer
-			ussA := a.stats[StatPrivateClean] + a.stats[StatPrivateDirty]
-			ussB := b.stats[StatPrivateClean] + b.stats[StatPrivateDirty]
-			cmp = ussA - ussB
+			cmp = a.getUSS() - b.getUSS()
 		case "user": // not in stats map, string
 			userA := pidOwnersMap[a.pid].username
 			userB := pidOwnersMap[b.pid].username
