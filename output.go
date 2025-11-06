@@ -70,33 +70,33 @@ func otherColumnsWidth(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, huma
 	rssWidth := 3
 
 	for _, rollup := range rollups {
-		l := len(fmt.Sprintf("%d", rollup.pid))
+		l := len(fmt.Sprintf("%d", rollup.PID()))
 		if l > pidWidth {
 			pidWidth = l
 		}
 
-		user := pidOwnersMap[rollup.pid].username
+		user := pidOwnersMap[rollup.PID()].username
 		if user == "" {
-			user = strconv.Itoa(pidOwnersMap[rollup.pid].uid)
+			user = strconv.Itoa(pidOwnersMap[rollup.PID()].uid)
 		}
 		l = len(user)
 		if l > userWidth {
 			userWidth = l
 		}
 
-		uss := rollup.getUSS()
+		uss := rollup.USS()
 		l = len(kiloBytesToString(uss, humanReadable))
 		if l > ussWidth {
 			ussWidth = l
 		}
 
-		pss := rollup.getPSS()
+		pss := rollup.PSS()
 		l = len(kiloBytesToString(pss, humanReadable))
 		if l > pssWidth {
 			pssWidth = l
 		}
 
-		rss := rollup.getRSS()
+		rss := rollup.RSS()
 		l = len(kiloBytesToString(rss, humanReadable))
 		if l > rssWidth {
 			rssWidth = l
@@ -133,10 +133,10 @@ func render(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[
 
 	t.AppendHeader(table.Row{"PID", "User", "USS", "PSS", "RSS", "Command"})
 	for _, rollup := range rollups {
-		pid := rollup.pid
-		uss := kiloBytesToString((rollup.getUSS()), humanReadable)
-		pss := kiloBytesToString((rollup.getPSS()), humanReadable)
-		rss := kiloBytesToString(rollup.getRSS(), humanReadable)
+		pid := rollup.PID()
+		uss := kiloBytesToString((rollup.USS()), humanReadable)
+		pss := kiloBytesToString((rollup.PSS()), humanReadable)
+		rss := kiloBytesToString(rollup.RSS(), humanReadable)
 		user := pidOwnersMap[pid].username
 		if user == "" {
 			user = strconv.Itoa(pidOwnersMap[pid].uid)

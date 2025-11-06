@@ -39,15 +39,19 @@ type SmemRollup struct {
 	stats  map[string]int
 }
 
-func (r SmemRollup) getUSS() int {
+func (r SmemRollup) PID() int {
+	return r.pid
+}
+
+func (r SmemRollup) USS() int {
 	return r.stats[StatPrivateClean] + r.stats[StatPrivateDirty]
 }
 
-func (r SmemRollup) getPSS() int {
+func (r SmemRollup) PSS() int {
 	return r.stats[StatPSS]
 }
 
-func (r SmemRollup) getRSS() int {
+func (r SmemRollup) RSS() int {
 	return r.stats[StatRSS]
 }
 

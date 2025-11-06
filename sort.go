@@ -20,18 +20,15 @@ func sortRollups(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap
 	keyLower := strings.ToLower(key)
 
 	comparators := map[string]func(a, b SmemRollup) int{
-		"pid": makeComparator(func(r SmemRollup) int { return r.pid }),
-
-		"uss": makeComparator(func(r SmemRollup) int { return r.getUSS() }),
-		"pss": makeComparator(func(r SmemRollup) int { return r.getPSS() }),
-		"rss": makeComparator(func(r SmemRollup) int { return r.getRSS() }),
-
+		"pid": makeComparator(func(r SmemRollup) int { return r.PID() }),
+		"uss": makeComparator(func(r SmemRollup) int { return r.USS() }),
+		"pss": makeComparator(func(r SmemRollup) int { return r.PSS() }),
+		"rss": makeComparator(func(r SmemRollup) int { return r.RSS() }),
 		"user": makeComparator(func(r SmemRollup) string {
-			return pidOwnersMap[r.pid].username
+			return pidOwnersMap[r.PID()].username
 		}),
-
 		"command": makeComparator(func(r SmemRollup) string {
-			return cmdlineMap[r.pid]
+			return cmdlineMap[r.PID()]
 		}),
 	}
 
