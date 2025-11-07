@@ -15,9 +15,9 @@ func makeComparator[T cmp.Ordered](getter RollupGetter[T]) RollupComparator {
 	}
 }
 
+// Sorts rollups by one of the supported keys.
+// Keys are validated upstream.
 func sortRollups(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string, key string, reverseOrder bool) []SmemRollup {
-	keyLower := strings.ToLower(key)
-
 	comparators := map[string]RollupComparator{
 		"pid": makeComparator(SmemRollup.PID),
 		"uss": makeComparator(SmemRollup.USS),
@@ -31,7 +31,7 @@ func sortRollups(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap
 		}),
 	}
 
-	comparator := comparators[keyLower] // key is validated upstream
+	comparator := comparators[strings.ToLower(key)]
 
 	slices.SortFunc(rollups, func(a, b SmemRollup) int {
 		c := comparator(a, b)
