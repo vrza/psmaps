@@ -18,15 +18,15 @@ func makeComparator[T cmp.Ordered](getter RollupGetter[T]) RollupComparator {
 func sortRollups(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string, key string, reverseOrder bool) []SmemRollup {
 	keyLower := strings.ToLower(key)
 
-	comparators := map[string]func(SmemRollup, SmemRollup) int{
-		"pid": makeComparator[int](SmemRollup.PID),
-		"uss": makeComparator[int](SmemRollup.USS),
-		"pss": makeComparator[int](SmemRollup.PSS),
-		"rss": makeComparator[int](SmemRollup.RSS),
-		"user": makeComparator[string](func(r SmemRollup) string {
+	comparators := map[string]RollupComparator{
+		"pid": makeComparator(SmemRollup.PID),
+		"uss": makeComparator(SmemRollup.USS),
+		"pss": makeComparator(SmemRollup.PSS),
+		"rss": makeComparator(SmemRollup.RSS),
+		"user": makeComparator(func(r SmemRollup) string {
 			return pidOwnersMap[r.PID()].username
 		}),
-		"command": makeComparator[string](func(r SmemRollup) string {
+		"command": makeComparator(func(r SmemRollup) string {
 			return cmdlineMap[r.PID()]
 		}),
 	}
