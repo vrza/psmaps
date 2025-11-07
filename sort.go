@@ -6,28 +6,27 @@ import (
 	"strings"
 )
 
-// Wraps an anoynymous getter function and produces a comparator
-// suitable for slices.SortFunc
-func makeComparator[T cmp.Ordered](getter func(SmemRollup) T) func(SmemRollup, SmemRollup) int {
+type RollupGetter[T cmp.Ordered] func(SmemRollup) T
+type RollupComparator func(SmemRollup, SmemRollup) int
+
+func makeComparator[T cmp.Ordered](getter RollupGetter[T]) RollupComparator {
 	return func(a, b SmemRollup) int {
 		return cmp.Compare(getter(a), getter(b))
 	}
 }
 
-// Sorts rollups based on string keys: each key maps to a lambda that gets
-// the values to pass to cmp.Compare
 func sortRollups(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string, key string, reverseOrder bool) []SmemRollup {
 	keyLower := strings.ToLower(key)
 
 	comparators := map[string]func(SmemRollup, SmemRollup) int{
-		"pid": makeComparator(SmemRollup.PID),
-		"uss": makeComparator(SmemRollup.USS),
-		"pss": makeComparator(SmemRollup.PSS),
-		"rss": makeComparator(SmemRollup.RSS),
-		"user": makeComparator(func(r SmemRollup) string {
+		"pid": makeComparator[int](SmemRollup.PID),
+		"uss": makeComparator[int](SmemRollup.USS),
+		"pss": makeComparator[int](SmemRollup.PSS),
+		"rss": makeComparator[int](SmemRollup.RSS),
+		"user": makeComparator[string](func(r SmemRollup) string {
 			return pidOwnersMap[r.PID()].username
 		}),
-		"command": makeComparator(func(r SmemRollup) string {
+		"command": makeComparator[string](func(r SmemRollup) string {
 			return cmdlineMap[r.PID()]
 		}),
 	}
