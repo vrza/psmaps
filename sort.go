@@ -17,6 +17,10 @@ func makeComparator[T cmp.Ordered](getter RollupGetter[T]) RollupComparator {
 
 // Sorts rollups by one of the supported keys.
 // Keys are validated upstream.
+// Helper abstractions:
+// comparator function -- takes two SmemRollups and compares them
+// getter function -- used by comparator internally to obtain values to feed into cmp.Compare
+// comparator factory -- takes a getter function and returns a comparator function
 func sortRollups(rollups []SmemRollup, pidOwnersMap map[int]PidOwner, cmdlineMap map[int]string, key string, reverseOrder bool) []SmemRollup {
 	comparators := map[string]RollupComparator{
 		"pid": makeComparator(SmemRollup.PID),
